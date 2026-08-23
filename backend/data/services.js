@@ -1,3 +1,5 @@
+import { expandedServices } from './expandedServices.js';
+
 // Registry-owned metadata: the classifier returns only an intent ID and can never supply a URL.
 // TODO(URL-VERIFY): Re-check all deep links before production. Entries marked below intentionally use stable official landing pages.
 export const services = [
@@ -18,7 +20,6 @@ export const services = [
   ['file_rti','RTI Online','File an RTI Request','Submit an RTI request or first appeal to Central Government public authorities.','Grievances','File RTI','https://rtionline.gov.in/',['rti','right to information','information request'],'RT'],
   ['academic_credits','Academic Bank of Credits','Academic Credit Account','Access your Academic Bank of Credits account and records.','Education','Open ABC','https://www.abc.gov.in/',['academic bank','abc id','academic credits','credit account'],'AB'],
   ['digilocker','DigiLocker','Digital Documents','Access authentic digital certificates and documents.','Documents','Open DigiLocker','https://www.digilocker.gov.in/',['digilocker','digital document','certificate download','marksheet','documents'],'DL']
-].map(([intent,portalName,serviceName,description,category,buttonText,officialUrl,keywords,logo]) => ({ intent,portalName,serviceName,description,category,buttonText,officialUrl,keywords,logo,urlNeedsVerification:false }));
+].map(([intent,portalName,serviceName,description,category,buttonText,officialUrl,keywords,logo]) => ({ intent,portalName,serviceName,description,category,buttonText,officialUrl,keywords,logo,urlNeedsVerification:false })).concat(expandedServices);
 
 export const categories = [...new Set(services.map((service) => service.category))];
-

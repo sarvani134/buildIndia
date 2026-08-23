@@ -5,4 +5,6 @@ import App from './App.jsx';
 import './styles.css';
 import './modal.css';
 import './autocomplete.css';
+import './action-buttons.css';
+import './languages.css';
 ReactDOM.createRoot(document.getElementById('root')).render(<React.StrictMode><BrowserRouter><App/></BrowserRouter></React.StrictMode>);

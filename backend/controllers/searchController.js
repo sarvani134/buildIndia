@@ -1,6 +1,7 @@
 import { classifyWithConfiguredProvider } from '../services/intentClassifier.js';
 import { allServices } from '../services/serviceRegistry.js';
 import { isTrustedOfficialUrl } from '../services/urlValidator.js';
+import { expandMultilingualQuery } from '../services/languageNormalizer.js';
 
 const safe = ({ _id, keywords, urlNeedsVerification, ...service }) => service;
 const reply = (res, payload) => res.json(payload);
@@ -10,7 +11,7 @@ export async function search(req, res, next) {
     const query = typeof req.body.query === 'string' ? req.body.query.trim().slice(0, 300) : '';
     if (!query) return res.status(400).json({ message: 'Please describe the service you need.' });
     const registry = await allServices();
-    const lower = query.toLowerCase();
+    const lower = expandMultilingualQuery(query);
 
     if (/pension/.test(lower) && /(not received|problem|stopped|two months|complaint|status)/.test(lower)) {
       const intents = ['check_pension','life_certificate','pension_grievance'];
@@ -18,6 +19,19 @@ export async function search(req, res, next) {
     }
     if (/renew.+licen[cs]e|licen[cs]e.+renew/.test(lower) && !/(driving|driver)/.test(lower)) {
       return reply(res, { type:'clarification', query, message:'Which licence or permit do you want help with?', options:[{label:'Driving Licence',query:'renew driving licence'},{label:'Vehicle Permit',query:'vehicle permit services'},{label:'Trade Licence',query:'file a government grievance about trade licence'}] });
+    }
+    // Preserve multiple equally plausible registry matches for broad searches instead of guessing one.
+    const queryWords = lower.replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter((word) => word.length >= 3);
+    const related = registry.map((service) => {
+      const searchable = [service.serviceName, ...service.keywords].join(' ').toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
+      const searchableWords = searchable.split(/\s+/).filter(Boolean);
+      const matchedWords = queryWords.filter((word) => searchableWords.some((candidate) => candidate.startsWith(word) || word.startsWith(candidate)));
+      return { service, score: new Set(matchedWords).size };
+    }).filter(({ score, service }) => score > 0 && isTrustedOfficialUrl(service.officialUrl)).sort((a,b) => b.score-a.score);
+    const bestRelatedScore = related[0]?.score || 0;
+    const equallyRelated = related.filter(({ score }) => score === bestRelatedScore);
+    if (equallyRelated.length > 1) {
+      return reply(res, { type:'result', query, related:true, results:equallyRelated.slice(0,6).map(({ service }) => safe(service)) });
     }
     const classification = await classifyWithConfiguredProvider(query);
     if (!classification.intent || classification.confidence < .43) {
@@ -41,7 +55,8 @@ export async function listServices(req, res, next) {
 
 export async function suggestions(req, res, next) {
   try {
-    const query = typeof req.query.q === 'string' ? req.query.q.trim().toLowerCase().slice(0, 80) : '';
+    const rawQuery = typeof req.query.q === 'string' ? req.query.q.trim().toLowerCase().slice(0, 80) : '';
+    const query = expandMultilingualQuery(rawQuery);
     if (query.length < 2) return res.json({ suggestions: [] });
     const registry = await allServices();
     const words = query.split(/\s+/).filter(Boolean);

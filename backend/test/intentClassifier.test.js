@@ -4,4 +4,12 @@ import { classifyIntent } from '../services/intentClassifier.js';
 test('recognises natural PF language', () => assert.equal(classifyIntent('my company cuts PF every month, where can I see it').intent, 'check_pf_balance'));
 test('distinguishes cyber fraud', () => assert.equal(classifyIntent('complain about an online payment scam').intent, 'report_cybercrime'));
 test('does not guess nonsense', () => assert.equal(classifyIntent('purple elephants dancing').intent, null));
-
+test('understands common Hinglish', () => assert.equal(classifyIntent('mujhe PF ka paisa dekhna hai').intent, 'check_pf_balance'));
+test('understands Roman Telugu', () => assert.equal(classifyIntent('naaku pf dabbu chudali').intent, 'check_pf_balance'));
+test('understands Roman Kannada', () => assert.equal(classifyIntent('nanage driving license renew madbeku').intent, 'renew_driving_license'));
+test('understands Roman Marathi', () => assert.equal(classifyIntent('mala nokri pahije').intent, 'job_search'));
+test('understands Roman Malayalam', () => assert.equal(classifyIntent('enikku online doctor venam').intent, 'telemedicine'));
+test('understands Roman Tamil', () => assert.equal(classifyIntent('enakku rayil ticket venum').intent, 'book_train'));
+test('understands Roman Bengali', () => assert.equal(classifyIntent('amar scholarship status dekhte chai').intent, 'scholarship_status'));
+test('understands Roman Gujarati', () => assert.equal(classifyIntent('mane kisan credit card joie').intent, 'kisan_credit'));
+test('understands Roman Punjabi', () => assert.equal(classifyIntent('mainu bijli bill bharna hai').intent, 'electricity_services'));
