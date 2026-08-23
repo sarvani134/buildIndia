@@ -39,3 +39,30 @@ export async function listServices(req, res, next) {
   } catch (error) { next(error); }
 }
 
+export async function suggestions(req, res, next) {
+  try {
+    const query = typeof req.query.q === 'string' ? req.query.q.trim().toLowerCase().slice(0, 80) : '';
+    if (query.length < 2) return res.json({ suggestions: [] });
+    const registry = await allServices();
+    const words = query.split(/\s+/).filter(Boolean);
+    const ranked = registry.map((service) => {
+      // Keywords improve matching, but users see only the canonical service action.
+      const score = [service.serviceName, ...service.keywords].reduce((best, phrase) => {
+        const value = phrase.toLowerCase();
+        const starts = value.startsWith(query) ? 5 : 0;
+        const contains = value.includes(query) ? 3 : 0;
+        const overlap = words.filter((word) => value.includes(word)).length;
+        return Math.max(best, starts + contains + overlap);
+      }, 0);
+      return { label: service.serviceName, portalName: service.portalName, category: service.category, query: service.serviceName, officialUrl: service.officialUrl, score };
+    }).filter((item) => item.score > 0).sort((a, b) => b.score - a.score || a.label.length - b.label.length);
+    const seen = new Set();
+    res.json({ suggestions: ranked.filter((item) => {
+      // Do not repeat multiple actions that currently lead to the same portal page.
+      const key = item.officialUrl.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0, 7).map(({ score, officialUrl, ...item }) => item) });
+  } catch (error) { next(error); }
+}
