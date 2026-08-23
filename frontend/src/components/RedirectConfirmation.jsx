@@ -17,7 +17,7 @@ export default function RedirectConfirmation({ service, onCancel, onConfirm }) {
       <h2 id="redirect-title">Continue to {service.portalName}?</h2>
       <p>You will be redirected from SevaSetu to the official <strong>{service.portalName}</strong> portal.</p>
       <div className="destination"><span>Destination</span><strong>{domain}</strong></div>
-      <p className="modal-note">Complete authentication and enter personal information only on the official portal.</p>
+      <p className="modal-note">{service.redirectNote || 'Complete authentication and enter personal information only on the official portal.'}</p>
       <div className="modal-actions"><button className="cancel-button" onClick={onCancel}>Cancel</button><button ref={continueButton} className="continue-button" onClick={onConfirm}>Continue to portal <ArrowUpRight /></button></div>
     </section>
   </div>;

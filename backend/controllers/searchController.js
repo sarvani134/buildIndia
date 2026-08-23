@@ -2,6 +2,7 @@ import { classifyWithConfiguredProvider } from '../services/intentClassifier.js'
 import { allServices } from '../services/serviceRegistry.js';
 import { isTrustedOfficialUrl } from '../services/urlValidator.js';
 import { expandMultilingualQuery } from '../services/languageNormalizer.js';
+import { findDigiLockerDocuments } from '../data/digilockerDocuments.js';
 
 const safe = ({ _id, keywords, urlNeedsVerification, ...service }) => service;
 const reply = (res, payload) => res.json(payload);
@@ -12,6 +13,11 @@ export async function search(req, res, next) {
     if (!query) return res.status(400).json({ message: 'Please describe the service you need.' });
     const registry = await allServices();
     const lower = expandMultilingualQuery(query);
+
+    const documentMatches = findDigiLockerDocuments(lower);
+    if (documentMatches.length) {
+      return reply(res, { type:'result', subtype:'digilocker_documents', query, related:true, results:documentMatches.map(safe) });
+    }
 
     if (/pension/.test(lower) && /(not received|problem|stopped|two months|complaint|status)/.test(lower)) {
       const intents = ['check_pension','life_certificate','pension_grievance'];

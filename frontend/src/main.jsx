@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
 import './styles.css';
 import './modal.css';
+import './result-guidance.css';
 import './autocomplete.css';
 import './action-buttons.css';
 import './languages.css';
