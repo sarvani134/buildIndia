@@ -1,0 +1,1 @@
+{"name":"seva-setu-backend","version":"1.0.0","type":"module","scripts":{"dev":"node --watch server.js","start":"node server.js","seed":"node data/seed.js","test":"node --test"},"dependencies":{"cors":"^2.8.5","dotenv":"^17.2.1","express":"^5.1.0","mongoose":"^8.18.0"},"devDependencies":{}}
