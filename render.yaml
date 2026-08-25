@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: seva-setu
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm ci --prefix backend && npm ci --prefix frontend && npm run build
+    startCommand: npm start --prefix backend
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 20
