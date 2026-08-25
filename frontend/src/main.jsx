@@ -7,5 +7,6 @@ import './modal.css';
 import './result-guidance.css';
 import './autocomplete.css';
 import './action-buttons.css';
+import './india-theme.css';
 import './languages.css';
 ReactDOM.createRoot(document.getElementById('root')).render(<React.StrictMode><BrowserRouter><App/></BrowserRouter></React.StrictMode>);

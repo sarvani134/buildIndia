@@ -1,0 +1,218 @@
+:root {
+  color: #071d57;
+  background: #fffdf9;
+}
+
+body {
+  min-width: 320px;
+  overflow-x: hidden;
+  background: #fffdf9;
+}
+
+main {
+  min-height: 100vh;
+  overflow: hidden;
+  background-color: #fffdf8;
+  background-image:
+    linear-gradient(rgba(255,255,255,.06), rgba(255,255,255,.06)),
+    url('./assets/india-hero-background.png');
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+.hero {
+  position: relative;
+  isolation: isolate;
+  min-height: 620px;
+  padding: 50px 4vw 52px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.hero-brand {
+  position: absolute;
+  top: 34px;
+  left: max(4vw, 24px);
+  width: max-content;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  color: #09245f;
+  text-decoration: none;
+}
+
+.hero-brand-mark {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #fff8ee, #fff);
+  border: 1px solid rgba(18, 63, 142, .16);
+  box-shadow: 0 6px 18px rgba(15, 45, 95, .12);
+}
+
+.hero-brand-mark::before,
+.hero-brand-mark::after {
+  content: '';
+  position: absolute;
+  left: -5px;
+  right: -5px;
+  height: 3px;
+  border-radius: 3px;
+  z-index: -1;
+}
+.hero-brand-mark::before { top: 9px; background: #ff8b25; transform: rotate(-7deg); }
+.hero-brand-mark::after { bottom: 9px; background: #229447; transform: rotate(7deg); }
+.hero-brand-mark i {
+  width: 25px;
+  height: 25px;
+  border: 2px solid #1855b7;
+  border-radius: 50%;
+  background: repeating-conic-gradient(#1855b7 0 1deg, transparent 1deg 15deg);
+  box-shadow: inset 0 0 0 7px #fff, inset 0 0 0 8px #1855b7;
+}
+
+.hero-brand-copy { display: flex; flex-direction: column; align-items: flex-start; line-height: 1; }
+.hero-brand-copy strong { font: 900 27px Manrope; letter-spacing: -.04em; }
+.hero-brand-copy strong span { color: #1760c8; }
+.hero-brand-copy small { margin-top: 5px; color: #536583; font-size: 10px; font-weight: 900; letter-spacing: .2em; text-transform: uppercase; }
+
+.tricolor-line {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  right: 12px;
+  height: 4px;
+  display: grid;
+  grid-template-columns: 1fr 42px 1fr;
+  align-items: center;
+}
+
+.tricolor-line span:first-child { height: 2px; background: linear-gradient(90deg, #ff7a00, #ff9933); }
+.tricolor-line span:last-child { height: 2px; background: linear-gradient(90deg, #36a54b, #138808); }
+.tricolor-line i {
+  width: 24px;
+  height: 24px;
+  justify-self: center;
+  border: 2px solid #1746a2;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, #1746a2 0 1deg, transparent 1deg 15deg);
+  box-shadow: inset 0 0 0 7px #fff, inset 0 0 0 8px #1746a2;
+}
+
+.hero h1 {
+  margin: 0 0 12px;
+  color: #071d57;
+  font-size: clamp(38px, 5vw, 64px);
+  letter-spacing: -.045em;
+}
+
+.hero h1 em { color: #1959c8; }
+.subtitle { max-width: 610px; margin-bottom: 30px; color: #53617d; font-size: 16px; line-height: 1.45; }
+
+.autocomplete { max-width: 850px; }
+.search-shell {
+  padding: 7px;
+  border: 2px solid transparent;
+  border-radius: 26px;
+  background: linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #ff7a00, #ffb14c 35%, #4ad981 72%, #138808) border-box;
+  box-shadow: 0 12px 28px rgba(12, 37, 83, .16);
+}
+.search-shell.suggestions-open { border-radius: 26px 26px 0 0; }
+.spark { width: 42px; height: 42px; margin-left: 1px; padding: 12px; border-radius: 50%; background: #fff5e9; color: #173c79; }
+.search-shell input { padding: 15px 5px; color: #102651; }
+.icon-btn { color: #0b2c68; }
+.search-btn { min-width: 112px; justify-content: center; border-radius: 20px; background: linear-gradient(135deg, #102b67, #071b4d); box-shadow: 0 7px 14px rgba(9,31,82,.24); }
+.search-btn svg { display: none; }
+
+.language-hint { margin-top: 22px; color: #626d83; font-weight: 500; }
+.language-hint button { border: 0; padding: 3px 7px; background: transparent; color: #1458c2; font-size: inherit; font-weight: 700; cursor: pointer; }
+.language-hint span { display: inline; margin: 0; color: #a4aab4; letter-spacing: 0; }
+
+.suggestions {
+  width: min(1060px, 100%);
+  margin: 25px auto 0;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+.suggestions button {
+  min-height: 56px;
+  min-width: 0;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border-color: #dbe0e8;
+  color: #0d255a;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 3px 8px rgba(18, 40, 78, .1);
+  white-space: normal;
+}
+.suggestions button svg { width: 21px; height: 21px; color: #123777; }
+.privacy { margin-top: 26px; color: #667085; font-size: 13px; }
+.privacy::before { content: '♢'; margin-right: 9px; color: #123d86; font-size: 20px; vertical-align: -2px; }
+
+.result-anchor {
+  position: relative;
+  z-index: 2;
+  min-height: 38vh;
+  padding: 1px 0 70px;
+  border-top: 1px solid rgba(21, 54, 105, .08);
+  background: linear-gradient(180deg, rgba(255,255,255,.52), rgba(255,255,255,.26));
+  backdrop-filter: blur(1.5px);
+}
+
+/* Keep search suggestions in the document flow so they never cover shortcuts or results. */
+.autocomplete-menu {
+  position: relative;
+  inset: auto;
+  max-height: 330px;
+  border-radius: 0 0 26px 26px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #b8c7dc transparent;
+}
+
+.search-shell:focus-within {
+  box-shadow: 0 14px 34px rgba(12, 37, 83, .2);
+}
+
+.suggestions button:focus-visible,
+.language-hint button:focus-visible,
+.search-btn:focus-visible,
+.icon-btn:focus-visible {
+  outline: 3px solid rgba(25, 89, 200, .28);
+  outline-offset: 2px;
+}
+
+.results, .empty, .clarification { position: relative; z-index: 1; }
+
+@media (max-width: 800px) {
+  .hero { padding-top: 120px; }
+  .suggestions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  main { background-position: 42% top; background-size: auto 100%; }
+  .hero { min-height: 720px; padding: 112px 16px 40px; }
+  .hero-brand { top: 28px; left: 20px; }
+  .hero-brand-mark { width: 42px; height: 42px; }
+  .hero h1 { font-size: 38px; }
+  .search-btn { min-width: auto; border-radius: 17px; }
+  .search-btn span { display: inline; }
+  .suggestions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .language-hint span { display: inline; }
+  .hero { background-position: 43% center; }
+}
