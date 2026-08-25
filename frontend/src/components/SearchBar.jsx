@@ -13,6 +13,7 @@ export default function SearchBar({ onSearch, loading, locale = 'en', initial = 
   const shell = useRef();
   const input = useRef();
   const suppressSuggestions = useRef(false);
+  const allowSuggestions = useRef(true);
 
   useEffect(() => setQuery(initial), [initial]);
 
@@ -28,7 +29,7 @@ export default function SearchBar({ onSearch, loading, locale = 'en', initial = 
       return;
     }
 
-    if (loading || query.trim().length < 2) {
+    if (!allowSuggestions.current || loading || query.trim().length < 2) {
       setSuggestions([]);
       setOpen(false);
       return;
@@ -65,11 +66,15 @@ export default function SearchBar({ onSearch, loading, locale = 'en', initial = 
     rec.lang = speechLocales[locale] || speechLocales.en;
     rec.onstart = () => setListening(true);
     rec.onend = () => setListening(false);
-    rec.onresult = (event) => setQuery(event.results[0][0].transcript);
+    rec.onresult = (event) => {
+      allowSuggestions.current = true;
+      setQuery(event.results[0][0].transcript);
+    };
     rec.start();
   };
 
   const runSearch = (value) => {
+    allowSuggestions.current = false;
     setOpen(false);
     setSuggestions([]);
     setActive(-1);
@@ -120,7 +125,10 @@ export default function SearchBar({ onSearch, loading, locale = 'en', initial = 
         aria-activedescendant={active >= 0 ? `suggestion-${active}` : undefined}
         aria-label={t(locale, 'subtitle')}
         value={query}
-        onChange={(event) => setQuery(event.target.value)}
+        onChange={(event) => {
+          allowSuggestions.current = true;
+          setQuery(event.target.value);
+        }}
         onFocus={() => !loading && suggestions.length > 0 && setOpen(true)}
         onKeyDown={keys}
         placeholder={t(locale, 'placeholder')}

@@ -14,10 +14,9 @@ export async function search(req, res, next) {
     const registry = await allServices();
     const lower = expandMultilingualQuery(query);
 
-    const documentMatches = findDigiLockerDocuments(lower);
-    if (documentMatches.length) {
-      return reply(res, { type:'result', subtype:'digilocker_documents', query, related:true, results:documentMatches.map(safe) });
-    }
+    const documentMatches = findDigiLockerDocuments(lower)
+      .filter((service) => isTrustedOfficialUrl(service.officialUrl))
+      .map(safe);
 
     if (/pension/.test(lower) && /(not received|problem|stopped|two months|complaint)/.test(lower)) {
       const intents = ['check_pension','life_certificate','pension_grievance'];
@@ -30,8 +29,14 @@ export async function search(req, res, next) {
     match.language = detectLanguage(query);
     if (match.type === 'result') {
       match.results = match.results.filter((service) => isTrustedOfficialUrl(service.officialUrl)).map(safe);
+      if (documentMatches.length) {
+        const intents = new Set(match.results.map((service) => service.intent));
+        const combined = match.results.concat(documentMatches.filter((service) => !intents.has(service.intent)));
+        return reply(res, { ...match, subtype:'service_with_digilocker_documents', related:true, documentCount:documentMatches.length, results:combined });
+      }
       if (!match.results.length) return reply(res, { type:'no_result', query, message:'No verified official service is available for that request yet.', suggestions:[] });
     }
+    if (documentMatches.length) return reply(res, { type:'result', subtype:'digilocker_documents', query, related:true, results:documentMatches });
     return reply(res, match);
   } catch (error) { next(error); }
 }

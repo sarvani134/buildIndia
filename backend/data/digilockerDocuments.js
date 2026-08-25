@@ -11,6 +11,10 @@ const document = (id, serviceName, description, keywords, destination = {}) => (
 });
 
 export const digilockerDocuments = [
+  document('digital_aadhaar', 'Digital Aadhaar', 'Open your UIDAI-issued digital Aadhaar in DigiLocker after signing in and linking your account.', ['aadhaar document', 'aadhaar card document', 'digital aadhaar', 'aadhaar in digilocker', 'download aadhaar document'], { category:'Identity documents', documentKind:'aadhaar', issuerName:'Unique Identification Authority of India', officialUrl:'https://www.digilocker.gov.in/web/issued-documents' }),
+  document('pan_verification_record', 'PAN Verification Record', 'Find the PAN verification record available from participating DigiLocker issuers.', ['pan document', 'pan card document', 'pan verification record', 'pan in digilocker'], { category:'Identity documents', documentKind:'pan', issuerName:'Income Tax Department' }),
+  document('driving_licence', 'Digital Driving Licence', 'Fetch your digital driving licence from the Ministry of Road Transport and Highways through DigiLocker.', ['driving licence document', 'driving license document', 'digital driving licence', 'driving licence in digilocker', 'dl document'], { category:'Transport documents', documentKind:'driving_licence', issuerName:'Ministry of Road Transport and Highways' }),
+  document('vehicle_registration_certificate', 'Vehicle Registration Certificate', 'Fetch your digital vehicle Registration Certificate from the Ministry of Road Transport and Highways through DigiLocker.', ['vehicle registration document', 'registration certificate document', 'vehicle rc document', 'digital rc', 'rc in digilocker'], { category:'Transport documents', documentKind:'vehicle_registration', issuerName:'Ministry of Road Transport and Highways' }),
   document('ap_ssc_marks_memo', 'AP SSC Class X Marksheet', 'Class X Marksheet from the Board of Secondary Education, Andhra Pradesh.', ['10th certificate ap', 'ap 10th certificate', 'andhra pradesh ssc', 'ap ssc marks memo', 'ap ssc marksheet', 'class 10 marksheet ap'], { state:'andhra pradesh', documentKind:'marksheet', issuerName:'Board Of Secondary Education, Andhra Pradesh', orgId:'005725', docTypeId:'SSCER' }),
   document('ap_open_school_passing_certificate', 'AP Open School Class X Passing Certificate', 'Class X passing certificate from the Andhra Pradesh Open School Society.', ['ap open school 10th certificate', 'andhra pradesh open school class 10 passing certificate'], { state:'andhra pradesh', documentKind:'passing', issuerName:'Andhra Pradesh Open School Society', orgId:'056345', docTypeId:'SPCER' }),
   document('class_x_marksheet', 'Class X Marksheet', 'Find a Class 10 board marksheet from a participating education issuer.', ['10th certificate', '10th marksheet', 'class 10 marksheet', 'class x marksheet', 'ssc marksheet', 'secondary marksheet']),
@@ -26,17 +30,27 @@ const words = (value) => value.toLowerCase().replace(/\b10(?:th)?\b/g, 'class 10
 
 export function findDigiLockerDocuments(query) {
   const queryWords = [...new Set(words(query))];
-  if (!/(certificate|marksheet|mark\s*(?:sheet|card)|marks?\s*memo|transcript|degree|migration|ssc|hsc|class\s*(?:10|12)|10th|12th)/i.test(query)) return [];
+  const educationDocument = /(certificate|marksheet|mark\s*(?:sheet|card)|marks?\s*memo|transcript|degree|migration|ssc|hsc|class\s*(?:10|12)|10th|12th)/i.test(query);
+  const identityOrTransportDocument = /(document|card|digital|download|fetch|digilocker)/i.test(query)
+    && /(aadhaar|aadhar|pan|driving\s+licen[cs]e|\bdl\b|vehicle\s+(?:registration|rc)|registration\s+certificate|\brc\b)/i.test(query);
+  if (!educationDocument && !identityOrTransportDocument) return [];
   const requestedLevel = /(?:10th|class\s*10|ssc)/i.test(query) ? '10' : /(?:12th|class\s*12|hsc)/i.test(query) ? '12' : null;
   const requestedState = /\b(?:ap|andhra\s*pradesh)\b/i.test(query) ? 'andhra pradesh' : null;
   const requestedKind = /marks?\s*(?:card|sheet|memo)|marksheet/i.test(query) ? 'marksheet' : /passing/i.test(query) ? 'passing' : /migration/i.test(query) ? 'migration' : null;
+  const requestedIdentityKind = /aadhaar|aadhar/i.test(query) ? 'aadhaar'
+    : /\bpan\b/i.test(query) ? 'pan'
+      : /driving\s+licen[cs]e|\bdl\b/i.test(query) ? 'driving_licence'
+        : /vehicle\s+(?:registration|rc)|registration\s+certificate|\brc\b/i.test(query) ? 'vehicle_registration'
+          : null;
   const minimumScore = requestedLevel ? 3 : 2;
   return digilockerDocuments.map((item) => {
     const score = Math.max(...[item.serviceName, ...item.keywords].map(words).map((phraseWords) => queryWords.reduce((total, word) => total + (phraseWords.includes(word) ? (word === 'ap' ? 3 : 1) : 0), 0)));
     return { item, score };
-  }).filter(({ item, score }) => score >= minimumScore
+  }).filter(({ item, score }) => {
+    return score >= minimumScore
       && (!requestedLevel || item.keywords.some((keyword) => words(keyword).includes(requestedLevel)))
       && (!requestedState || item.state === requestedState)
-      && (!requestedKind || (item.documentKind || item.serviceName.toLowerCase()).includes(requestedKind)))
-    .sort((a, b) => b.score - a.score).slice(0, 6).map(({ item }) => item);
+      && (!requestedKind || (item.documentKind || item.serviceName.toLowerCase()).includes(requestedKind))
+      && (!requestedIdentityKind || item.documentKind === requestedIdentityKind);
+  }).sort((a, b) => b.score - a.score).slice(0, 6).map(({ item }) => item);
 }
