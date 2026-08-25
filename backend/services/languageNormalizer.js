@@ -58,6 +58,13 @@ const concepts = {
   'train ticket beku':'book train', 'railway ticket pahije':'book train', 'train ticket venam':'book train',
   'rayil ticket venum':'book train', 'train ticket chai':'book train', 'train ticket joie':'book train',
 
+  // Common English and Indian-English ways of asking for the same action
+  'train booking':'book train', 'rail booking':'book train', 'railway reservation':'book train', 'train reservation':'book train',
+  'ticket reservation':'book train', 'check pnr':'pnr status', 'train timings':'train schedule',
+  'gas cylinder booking':'gas booking', 'book cylinder':'gas booking', 'hospital booking':'hospital appointment',
+  'pan application':'apply pan', 'passport application':'apply passport', 'voter registration':'register voter',
+  'job vacancies':'find job', 'sarkari naukri':'government job', 'scheme eligibility':'government scheme eligibility',
+
   // Health, agriculture, utilities and complaints
   'doctor ko dikhana':'doctor appointment', 'aspatal appointment':'hospital appointment', 'doctor appointment kavali':'doctor appointment',
   'doctor appointment beku':'doctor appointment', 'doctor chi appointment':'doctor appointment', 'doctor appointment venam':'doctor appointment',
@@ -100,15 +107,34 @@ const fillerWords = new Set([
   'mote','mora','darkar','kemiti','karibi'
 ]);
 
-const entries = Object.entries({ ...concepts, ...nativeConcepts }).sort(([a],[b]) => b.length - a.length);
+const entries = Object.entries({ ...concepts, ...nativeConcepts })
+  .map(([phrase, english]) => [normalizeSearchText(phrase), english])
+  .sort(([a],[b]) => b.length - a.length);
 
 // Canonical entity aliases are shared by deterministic and provider-backed matching.
 export function normalizeSearchText(input = '') {
   return input.toLowerCase()
     .replace(/\b(?:aadhaar|aadhar|adhaar|adhar)\b/g, 'aadhaar')
-    .replace(/\bdl\b/g, 'driving licence')
+    .replace(/\b(?:pasport|passprt)\b/g, 'passport')
+    .replace(/\b(?:licence|lisence|lisense)\b/g, 'license')
+    .replace(/\b(?:pancard|pan-card)\b/g, 'pan card')
+    .replace(/\b(?:rationcard|ration-card)\b/g, 'ration card')
+    .replace(/\bdl\b/g, 'driving license')
     .replace(/[^\p{L}\p{M}\p{N}\s-]/gu, ' ')
     .replace(/\s+/g, ' ')
+    .replace(/\b(?:booking|bookings|booked|reservation|reservations|reserved)\b/g, 'book')
+    .replace(/\b(?:applying|applied|application|applications)\b/g, 'apply')
+    .replace(/\b(?:registration|registrations|registering|registered)\b/g, 'register')
+    .replace(/\b(?:renewal|renewing|renewed)\b/g, 'renew')
+    .replace(/\b(?:payments|payment|paying|paid)\b/g, 'pay')
+    .replace(/\b(?:complaints|complaining|complain|grievances|grievance)\b/g, 'complaint')
+    .replace(/\b(?:searching|searched|locate|looking)\b/g, 'find')
+    .replace(/\b(?:downloads|downloading|downloaded)\b/g, 'download')
+    .replace(/\b(?:tickets)\b/g, 'ticket')
+    .replace(/\b(?:trains)\b/g, 'train')
+    .replace(/\b(?:jobs|vacancies)\b/g, 'job')
+    .replace(/\b(?:certificates)\b/g, 'certificate')
+    .replace(/\b(?:timings)\b/g, 'time')
     .trim();
 }
 
