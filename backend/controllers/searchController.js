@@ -1,8 +1,8 @@
-import { classifyWithConfiguredProvider } from '../services/intentClassifier.js';
 import { allServices } from '../services/serviceRegistry.js';
 import { isTrustedOfficialUrl } from '../services/urlValidator.js';
-import { expandMultilingualQuery } from '../services/languageNormalizer.js';
+import { detectLanguage, expandMultilingualQuery } from '../services/languageNormalizer.js';
 import { findDigiLockerDocuments } from '../data/digilockerDocuments.js';
+import { matchServiceRequest } from '../services/serviceMatcher.js';
 
 const safe = ({ _id, keywords, urlNeedsVerification, ...service }) => service;
 const reply = (res, payload) => res.json(payload);
@@ -19,34 +19,20 @@ export async function search(req, res, next) {
       return reply(res, { type:'result', subtype:'digilocker_documents', query, related:true, results:documentMatches.map(safe) });
     }
 
-    if (/pension/.test(lower) && /(not received|problem|stopped|two months|complaint|status)/.test(lower)) {
+    if (/pension/.test(lower) && /(not received|problem|stopped|two months|complaint)/.test(lower)) {
       const intents = ['check_pension','life_certificate','pension_grievance'];
       return reply(res, { type:'clarification', query, message:'What would you like to do about the pension?', options: registry.filter((s) => intents.includes(s.intent)).map((s) => ({ label:s.serviceName, query:s.keywords[0] })) });
     }
     if (/renew.+licen[cs]e|licen[cs]e.+renew/.test(lower) && !/(driving|driver)/.test(lower)) {
       return reply(res, { type:'clarification', query, message:'Which licence or permit do you want help with?', options:[{label:'Driving Licence',query:'renew driving licence'},{label:'Vehicle Permit',query:'vehicle permit services'},{label:'Trade Licence',query:'file a government grievance about trade licence'}] });
     }
-    // Preserve multiple equally plausible registry matches for broad searches instead of guessing one.
-    const queryWords = lower.replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter((word) => word.length >= 3);
-    const related = registry.map((service) => {
-      const searchable = [service.serviceName, ...service.keywords].join(' ').toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
-      const searchableWords = searchable.split(/\s+/).filter(Boolean);
-      const matchedWords = queryWords.filter((word) => searchableWords.some((candidate) => candidate.startsWith(word) || word.startsWith(candidate)));
-      return { service, score: new Set(matchedWords).size };
-    }).filter(({ score, service }) => score > 0 && isTrustedOfficialUrl(service.officialUrl)).sort((a,b) => b.score-a.score);
-    const bestRelatedScore = related[0]?.score || 0;
-    const equallyRelated = related.filter(({ score }) => score === bestRelatedScore);
-    if (equallyRelated.length > 1) {
-      return reply(res, { type:'result', query, related:true, results:equallyRelated.slice(0,6).map(({ service }) => safe(service)) });
+    const match = await matchServiceRequest(query, registry);
+    match.language = detectLanguage(query);
+    if (match.type === 'result') {
+      match.results = match.results.filter((service) => isTrustedOfficialUrl(service.officialUrl)).map(safe);
+      if (!match.results.length) return reply(res, { type:'no_result', query, message:'No verified official service is available for that request yet.', suggestions:[] });
     }
-    const classification = await classifyWithConfiguredProvider(query);
-    if (!classification.intent || classification.confidence < .43) {
-      const possible = classification.alternatives.filter((item) => item.confidence >= .3).map((item) => registry.find((s) => s.intent === item.intent)).filter(Boolean);
-      return reply(res, { type:'no_result', query, message:"We couldn't confidently identify the service you need.", suggestions: possible.map((s) => safe(s)) });
-    }
-    const matches = registry.filter((service) => service.intent === classification.intent && isTrustedOfficialUrl(service.officialUrl));
-    if (!matches.length) return reply(res, { type:'no_result', query, message:'No verified official service is available for that request yet.', suggestions:[] });
-    return reply(res, { type:'result', query, confidence:classification.confidence, results:matches.map(safe) });
+    return reply(res, match);
   } catch (error) { next(error); }
 }
 

@@ -9,4 +9,5 @@ import './autocomplete.css';
 import './action-buttons.css';
 import './india-theme.css';
 import './languages.css';
+import './language-selector.css';
 ReactDOM.createRoot(document.getElementById('root')).render(<React.StrictMode><BrowserRouter><App/></BrowserRouter></React.StrictMode>);

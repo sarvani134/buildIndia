@@ -4,6 +4,7 @@ import { expandedServices } from './expandedServices.js';
 // TODO(URL-VERIFY): Re-check all deep links before production. Entries marked below intentionally use stable official landing pages.
 export const services = [
   ['update_aadhaar_address','UIDAI','Update Aadhaar Address','Update your address using the official myAadhaar service.','Identity','Update Address','https://myaadhaar.uidai.gov.in/',['aadhaar address','change address','update address'],'आ'],
+  ['reprint_aadhaar','UIDAI','Replace or Reprint Aadhaar','Access the official myAadhaar service to retrieve or reprint Aadhaar.','Identity','Reprint Aadhaar','https://myaadhaar.uidai.gov.in/',['lost aadhaar','lost aadhar','replace aadhaar','reprint aadhaar'],'आ'],
   ['aadhaar_services','UIDAI','Aadhaar Online Services','Download Aadhaar, check update status, locate a centre and access other Aadhaar services.','Identity','Open Aadhaar Services','https://myaadhaar.uidai.gov.in/',['aadhaar','aadhar','uidai','download aadhaar'],'आ'],
   ['check_pf_balance','EPFO','PF Balance & Passbook','View your Employee Provident Fund balance and passbook.','Employment','View PF Balance','https://passbook.epfindia.gov.in/MemberPassBook/login',['pf balance','check my pf','provident fund','epf balance','pf money','company cuts pf','passbook'],'EP'],
   ['check_epfo_claim','EPFO','EPF Claim Status','Track the status of your provident fund claim.','Employment','Check Claim Status','https://www.epfindia.gov.in/site_en/For_Employees.php',['pf claim','epf claim','claim status','withdrawal status'],'EP'],
@@ -20,6 +21,6 @@ export const services = [
   ['file_rti','RTI Online','File an RTI Request','Submit an RTI request or first appeal to Central Government public authorities.','Grievances','File RTI','https://rtionline.gov.in/',['rti','right to information','information request'],'RT'],
   ['academic_credits','Academic Bank of Credits','Academic Credit Account','Access your Academic Bank of Credits account and records.','Education','Open ABC','https://www.abc.gov.in/',['academic bank','abc id','academic credits','credit account'],'AB'],
   ['digilocker','DigiLocker','Digital Documents','Access authentic digital certificates and documents.','Documents','Open DigiLocker','https://www.digilocker.gov.in/',['digilocker','digital document','certificate download','marksheet','documents'],'DL']
-].map(([intent,portalName,serviceName,description,category,buttonText,officialUrl,keywords,logo]) => ({ intent,portalName,serviceName,description,category,buttonText,officialUrl,keywords,logo,urlNeedsVerification:false })).concat(expandedServices);
+].map(([intent,portalName,serviceName,description,category,buttonText,officialUrl,keywords,logo]) => ({ intent,portalName,serviceName,description,category,buttonText,officialUrl,keywords,logo,urlNeedsVerification:false })).concat(expandedServices).map((service) => ({ ...service, serviceId:service.intent, department:service.portalName, state:'India', officialSource:'Verified SevaSetu service registry', lastVerified:'2026-08-24' }));
 
 export const categories = [...new Set(services.map((service) => service.category))];

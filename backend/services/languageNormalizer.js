@@ -71,6 +71,22 @@ const concepts = {
   'sarkara parathi':'government complaint', 'arasu pugaar':'government complaint', 'sarkari ovijog':'government complaint'
 };
 
+// Script terms map to the same canonical concepts as Roman-script phrases.
+// They are intentionally intent vocabulary, not localized service records.
+const nativeConcepts = {
+  'आधार':'aadhaar', 'पता':'address', 'बदलना':'update', 'बदल':'update', 'पेंशन':'pension', 'स्टेटस':'status', 'चेक':'check', 'ड्राइविंग लाइसेंस':'driving licence',
+  'ఆధార్':'aadhaar', 'చిరునామా':'address', 'మార్చ':'update', 'పెన్షన్':'pension', 'స్టేటస్':'status', 'చెక్':'check', 'చేయాలి':'check', 'డ్రైవింగ్ లైసెన్స్':'driving licence',
+  'ஆதார்':'aadhaar', 'முகவரி':'address', 'மாற்ற':'update', 'ஓய்வூதிய':'pension', 'நிலை':'status', 'பார்க்க':'check', 'ஓட்டுநர் உரிமம்':'driving licence',
+  'ಆಧಾರ್':'aadhaar', 'ವಿಳಾಸ':'address', 'ಬದಲಾಯ':'update', 'ಪಿಂಚಣಿ':'pension', 'ಸ್ಥಿತಿ':'status', 'ಪರಿಶೀಲ':'check', 'ಚಾಲನಾ ಪರವಾನಗಿ':'driving licence',
+  'ആധാർ':'aadhaar', 'വിലാസം':'address', 'മാറ്റ':'update', 'പെൻഷൻ':'pension', 'നില':'status', 'പരിശോധ':'check', 'ഡ്രൈവിംഗ് ലൈസൻസ്':'driving licence',
+  'आधार':'aadhaar', 'पत्ता':'address', 'बदलाय':'update', 'पेन्शन':'pension', 'स्थिती':'status', 'तपास':'check',
+  'আধার':'aadhaar', 'ঠিকানা':'address', 'পরিবর্তন':'update', 'পেনশন':'pension', 'স্থিতি':'status', 'চেক':'check',
+  'આધાર':'aadhaar', 'સરનામું':'address', 'બદલ':'update', 'પેન્શન':'pension', 'સ્થિતિ':'status', 'ચેક':'check',
+  'ਆਧਾਰ':'aadhaar', 'ਪਤਾ':'address', 'ਬਦਲ':'update', 'ਪੈਨਸ਼ਨ':'pension', 'ਸਥਿਤੀ':'status', 'ਚੈੱਕ':'check',
+  'ଆଧାର':'aadhaar', 'ଠିକଣା':'address', 'ପରିବର୍ତ୍ତନ':'update', 'ପେନସନ':'pension', 'ସ୍ଥିତି':'status', 'ଯାଞ୍ଚ':'check',
+  'آدھار':'aadhaar', 'پتہ':'address', 'تبدیل':'update', 'پنشن':'pension', 'اسٹیٹس':'status', 'چیک':'check'
+};
+
 const fillerWords = new Set([
   'mujhe','mera','meri','mere','chahiye','karna','hai','ka','ki','ko','main','apna','dikhao','batao',
   'naaku','naa','kavali','kaavali','cheyali','ela','undi','undhi','kawali',
@@ -84,10 +100,29 @@ const fillerWords = new Set([
   'mote','mora','darkar','kemiti','karibi'
 ]);
 
-const entries = Object.entries(concepts).sort(([a],[b]) => b.length - a.length);
+const entries = Object.entries({ ...concepts, ...nativeConcepts }).sort(([a],[b]) => b.length - a.length);
+
+// Canonical entity aliases are shared by deterministic and provider-backed matching.
+export function normalizeSearchText(input = '') {
+  return input.toLowerCase()
+    .replace(/\b(?:aadhaar|aadhar|adhaar|adhar)\b/g, 'aadhaar')
+    .replace(/\bdl\b/g, 'driving licence')
+    .replace(/[^\p{L}\p{M}\p{N}\s-]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function detectLanguage(input = '') {
+  const scripts = [
+    [/\p{Script=Devanagari}/u, 'hi'], [/\p{Script=Telugu}/u, 'te'], [/\p{Script=Tamil}/u, 'ta'],
+    [/\p{Script=Kannada}/u, 'kn'], [/\p{Script=Malayalam}/u, 'ml'], [/\p{Script=Bengali}/u, 'bn'],
+    [/\p{Script=Gujarati}/u, 'gu'], [/\p{Script=Gurmukhi}/u, 'pa'], [/\p{Script=Oriya}/u, 'or'], [/\p{Script=Arabic}/u, 'ur']
+  ];
+  return scripts.find(([pattern]) => pattern.test(input))?.[1] || 'en';
+}
 
 export function expandMultilingualQuery(input = '') {
-  const original = input.toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').replace(/\s+/g, ' ').trim();
+  const original = normalizeSearchText(input);
   const additions = [];
   for (const [phrase, english] of entries) if (original.includes(phrase)) additions.push(english);
   const meaningful = original.split(' ').filter((word) => !fillerWords.has(word)).join(' ');
