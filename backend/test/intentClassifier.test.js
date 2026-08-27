@@ -22,3 +22,35 @@ test('understands plural job vacancy searches', () => assert.equal(classifyInten
 test('understands gas cylinder booking', () => assert.equal(classifyIntent('gas cylinder booking').intent, 'lpg_subsidy'));
 test('understands hospital booking', () => assert.equal(classifyIntent('government hospital booking').intent, 'doctor_appointment'));
 test('tolerates a small service-name typo', () => assert.equal(classifyIntent('check my pensoin status').intent, 'check_pension'));
+
+test('maps varied train-booking language to one intent', () => {
+  const queries = [
+    'train booking', 'book train', 'book a train', 'railway booking', 'rail ticket',
+    'book railway ticket', 'train reservation', 'reserve train', 'irctc booking',
+    'trin booking', 'train bokking', 'book tran', 'I want to book a train', 'I need railway tickets'
+  ];
+  for (const query of queries) assert.equal(classifyIntent(query).intent, 'book_train', query);
+});
+
+test('maps varied driving-licence renewal language to one intent', () => {
+  const queries = [
+    'renew driving licence', 'driving license renewal', 'renew licence', 'DL renewal',
+    'my licence expired', 'renew my DL', 'licence renew karna hai',
+    'drving licence renew', 'renew driving lisence'
+  ];
+  for (const query of queries) assert.equal(classifyIntent(query).intent, 'renew_driving_license', query);
+});
+
+test('handles the imperfect demo queries through the staged intent pipeline', () => {
+  for (const query of ['booking train', 'reserve railway ticket', 'pls I want to bok a railway tiket', 'bok train tiket']) {
+    assert.equal(classifyIntent(query).intent, 'book_train', query);
+  }
+  assert.equal(classifyIntent('pension status kaise check kare').intent, 'check_pension');
+  assert.equal(classifyIntent('pension dabbu vachinda').intent, 'check_pension');
+});
+
+test('expands common Indian government-service abbreviations', () => {
+  assert.equal(classifyIntent('check employee provident fund balance').intent, 'check_pf_balance');
+  assert.equal(classifyIntent('EPF balance').intent, 'check_pf_balance');
+  assert.equal(classifyIntent('RTO services').intent, 'vehicle_services');
+});

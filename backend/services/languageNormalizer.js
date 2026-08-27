@@ -61,6 +61,7 @@ const concepts = {
   // Common English and Indian-English ways of asking for the same action
   'train booking':'book train', 'rail booking':'book train', 'railway reservation':'book train', 'train reservation':'book train',
   'ticket reservation':'book train', 'check pnr':'pnr status', 'train timings':'train schedule',
+  'pension dabbu vachinda':'check pension status', 'kaise check kare':'check status',
   'gas cylinder booking':'gas booking', 'book cylinder':'gas booking', 'hospital booking':'hospital appointment',
   'pan application':'apply pan', 'passport application':'apply passport', 'voter registration':'register voter',
   'job vacancies':'find job', 'sarkari naukri':'government job', 'scheme eligibility':'government scheme eligibility',
@@ -95,6 +96,8 @@ const nativeConcepts = {
 };
 
 const fillerWords = new Set([
+  'a','an','the','please','i','me','my','mine','we','our','want','wants','wanted','need','needs','needed',
+  'would','like','to','can','could','you','for','some','get','give','show','tell','help','with','about',
   'mujhe','mera','meri','mere','chahiye','karna','hai','ka','ki','ko','main','apna','dikhao','batao',
   'naaku','naa','kavali','kaavali','cheyali','ela','undi','undhi','kawali',
   'nanage','nanna','beku','hege','maadi','madbeku','ide',
@@ -114,15 +117,22 @@ const entries = Object.entries({ ...concepts, ...nativeConcepts })
 // Canonical entity aliases are shared by deterministic and provider-backed matching.
 export function normalizeSearchText(input = '') {
   return input.toLowerCase()
+    .replace(/\bpls\b/g, 'please')
     .replace(/\b(?:aadhaar|aadhar|adhaar|adhar)\b/g, 'aadhaar')
     .replace(/\b(?:pasport|passprt)\b/g, 'passport')
     .replace(/\b(?:licence|lisence|lisense)\b/g, 'license')
     .replace(/\b(?:pancard|pan-card)\b/g, 'pan card')
     .replace(/\b(?:rationcard|ration-card)\b/g, 'ration card')
+    .replace(/\b(?:employees? provident fund|provident fund|epf)\b/g, 'pf')
     .replace(/\bdl\b/g, 'driving license')
+    .replace(/\brc\b/g, 'registration certificate')
+    .replace(/\brto\b/g, 'vehicle services')
+    .replace(/\blpg\b/g, 'gas')
+    .replace(/\bssc\b/g, 'class 10 certificate')
     .replace(/[^\p{L}\p{M}\p{N}\s-]/gu, ' ')
     .replace(/\s+/g, ' ')
-    .replace(/\b(?:booking|bookings|booked|reservation|reservations|reserved)\b/g, 'book')
+    .replace(/\b(?:booking|bookings|booked|reserve|reserves|reserving|reservation|reservations|reserved)\b/g, 'book')
+    .replace(/\b(?:railway|rail)\b/g, 'train')
     .replace(/\b(?:applying|applied|application|applications)\b/g, 'apply')
     .replace(/\b(?:registration|registrations|registering|registered)\b/g, 'register')
     .replace(/\b(?:renewal|renewing|renewed)\b/g, 'renew')
@@ -134,8 +144,18 @@ export function normalizeSearchText(input = '') {
     .replace(/\b(?:trains)\b/g, 'train')
     .replace(/\b(?:jobs|vacancies)\b/g, 'job')
     .replace(/\b(?:certificates)\b/g, 'certificate')
+    .replace(/\bmark\s+(?:sheet|sheets|card|cards)\b/g, 'marksheet')
     .replace(/\b(?:timings)\b/g, 'time')
     .trim();
+}
+
+// Produces the compact representation used by intent matching. Display text and
+// multilingual concept expansion continue to retain the citizen's original words.
+export function normalizeIntentText(input = '') {
+  return normalizeSearchText(input)
+    .split(/\s+/)
+    .filter((word) => word && !fillerWords.has(word))
+    .join(' ');
 }
 
 export function detectLanguage(input = '') {
@@ -151,7 +171,7 @@ export function expandMultilingualQuery(input = '') {
   const original = normalizeSearchText(input);
   const additions = [];
   for (const [phrase, english] of entries) if (original.includes(phrase)) additions.push(english);
-  const meaningful = original.split(' ').filter((word) => !fillerWords.has(word)).join(' ');
+  const meaningful = normalizeIntentText(original);
   return [...new Set([original, meaningful, ...additions].filter(Boolean))].join(' ');
 }
 

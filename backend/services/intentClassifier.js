@@ -1,37 +1,55 @@
 import { services } from '../data/services.js';
-import { expandMultilingualQuery, normalizeSearchText } from './languageNormalizer.js';
+import { expandMultilingualQuery, normalizeIntentText } from './languageNormalizer.js';
 
-const normalize = (value) => normalizeSearchText(value).replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
-const tokens = (value) => new Set(normalize(value).split(' ').filter((word) => word.length > 1));
+const normalize = (value) => normalizeIntentText(value).replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+const tokens = (value) => [...new Set(normalize(value).split(' ').filter((word) => word.length > 1))];
 
-function oneEditApart(a, b) {
-  if (a === b) return true;
-  if (Math.min(a.length, b.length) < 6 || Math.abs(a.length - b.length) > 1 || a[0] !== b[0]) return false;
-  if (a.length === b.length) {
-    const differences = [...a].map((letter, index) => letter === b[index] ? -1 : index).filter((index) => index >= 0);
-    if (differences.length === 2 && differences[1] === differences[0] + 1
-      && a[differences[0]] === b[differences[1]] && a[differences[1]] === b[differences[0]]) return true;
+function damerauLevenshtein(left, right) {
+  const rows = Array.from({ length: left.length + 1 }, (_, index) => [index]);
+  rows[0] = Array.from({ length: right.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= left.length; i += 1) {
+    for (let j = 1; j <= right.length; j += 1) {
+      const cost = left[i - 1] === right[j - 1] ? 0 : 1;
+      rows[i][j] = Math.min(rows[i - 1][j] + 1, rows[i][j - 1] + 1, rows[i - 1][j - 1] + cost);
+      if (i > 1 && j > 1 && left[i - 1] === right[j - 2] && left[i - 2] === right[j - 1]) {
+        rows[i][j] = Math.min(rows[i][j], rows[i - 2][j - 2] + cost);
+      }
+    }
   }
-  let left = 0; let right = 0; let edits = 0;
-  while (left < a.length && right < b.length) {
-    if (a[left] === b[right]) { left += 1; right += 1; continue; }
-    edits += 1;
-    if (edits > 1) return false;
-    if (a.length > b.length) left += 1;
-    else if (b.length > a.length) right += 1;
-    else { left += 1; right += 1; }
+  return rows[left.length][right.length];
+}
+
+function tokenForms(word) {
+  const forms = new Set([word]);
+  if (word.length > 5 && word.endsWith('ing')) forms.add(word.slice(0, -3));
+  if (word.length > 4 && word.endsWith('ed')) forms.add(word.slice(0, -2));
+  for (const form of [...forms]) forms.add(form.replace(/([a-z])\1+/g, '$1'));
+  return [...forms];
+}
+
+function tokenSimilarity(left, right) {
+  if (left === right) return 1;
+  if (Math.min(left.length, right.length) < 3) return 0;
+  let best = 0;
+  for (const a of tokenForms(left)) for (const b of tokenForms(right)) {
+    best = Math.max(best, 1 - damerauLevenshtein(a, b) / Math.max(a.length, b.length));
   }
-  return edits + (left < a.length || right < b.length ? 1 : 0) <= 1;
+  return best;
 }
 
 function scoreKeyword(query, keyword) {
   const cleanQuery = normalize(query);
   const cleanKeyword = normalize(keyword);
-  if (cleanQuery.includes(cleanKeyword)) return 1 + Math.min(cleanKeyword.split(' ').length * .12, .45);
+  if (!cleanQuery || !cleanKeyword) return 0;
+  if (cleanQuery === cleanKeyword) return 1.45;
+  if (cleanQuery.includes(cleanKeyword)) return 1 + Math.min(tokens(cleanKeyword).length * .12, .45);
   const queryTokens = tokens(cleanQuery);
-  const keywordTokens = [...tokens(cleanKeyword)];
-  const matched = keywordTokens.filter((word) => [...queryTokens].some((queryWord) => oneEditApart(word, queryWord))).length;
-  return matched / keywordTokens.length;
+  const keywordTokens = tokens(cleanKeyword);
+  const similarities = keywordTokens.map((word) => Math.max(...queryTokens.map((queryWord) => tokenSimilarity(word, queryWord)), 0));
+  const phraseCoverage = similarities.reduce((total, score) => total + score, 0) / keywordTokens.length;
+  const strongMatches = similarities.filter((score) => score >= .7).length;
+  const completenessBonus = strongMatches === keywordTokens.length ? .18 : 0;
+  return phraseCoverage + completenessBonus;
 }
 
 export function classifyIntent(query) {
